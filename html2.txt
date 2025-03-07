@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Jornada do Herói - Livro Jogo</title>
+    <style>
+        /* Estilos gerais */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', serif;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* Tela inicial */
+        #tela-inicial {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="black"/><circle cx="200" cy="200" r="150" fill="darkblue"/><circle cx="200" cy="200" r="120" fill="purple"/><circle cx="200" cy="200" r="90" fill="darkred"/></svg>');
+            background-size: cover;
+            z-index: 100;
+        }
+
+        #background-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+            background: radial-gradient(circle, rgba(76,0,153,1) 0%, rgba(0,0,0,1) 100%);
+        }
+
+        .stars {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px white;
+            animation: star-twinkle 3s infinite;
+        }
+
+        @keyframes star-twinkle {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        #titulo-jogo {
+            font-size: 4em;
+            color: #fff;
+            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+            margin-bottom: 50px;
+            z-index: 101;
+        }
+
+        #botao-iniciar {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            background: linear-gradient(45deg, #800080, #4b0082);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff00ff;
+            transition: all 0.3s;
+            z-index: 101;
+        }
+
+        #botao-iniciar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px #ff00ff;
+        }
+
+        /* Tela de introdução */
+        #tela-introducao {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: black;
+            overflow: hidden;
+        }
+
+        #texto-introducao {
+            width: 80%;
+            font-size: 1.5em;
+            line-height: 1.6;
+            text-align: center;
+            transform: translateY(100%);
+            animation: scroll-up 30s linear forwards;
+            color: #ffcc00;
+            text-shadow: 0 0 5px #ffcc00;
+        }
+
+        @keyframes scroll-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(-100%); }
+        }
+
+        /* Páginas do jogo */
+        #pagina-jogo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="saddlebrown"/><rect x="20" y="20" width="360" height="360" fill="burlywood"/></svg>');
+            background-size: cover;
+            background-repeat: repeat;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #conteudo-pagina {
+            background-color: rgba(255, 235, 205, 0.9);
+            border-radius: 10px;
+            padding: 30px;
+            width: 80%;
+            max-width: 800px;
+            color: #654321;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            font-size: 1.2em;
+            line-height: 1.6;
+            text-align: justify;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        #texto-pagina {
+            margin-bottom: 30px;
+        }
+
+        #opcoes {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .opcao {
+            padding: 12px;
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .opcao:hover {
+            background-color: #A0522D;
+            transform: translateX(10px);
+        }
+
+        /* Tela de combate */
+        #tela-combate {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: linear-gradient(to bottom, #330000, #000000);
+            color: white;
+        }
+
+        #area-combate {
+            display: flex;
+            justify-content: space-between;
+            height: 60%;
+            padding: 20px;
+        }
+
+        .personagem, .inimigo {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar {
+            width: 200px;
+            height: 200px;
+            background-color: #555;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .personagem .avatar {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="none"/><circle cx="100" cy="70" r="40" fill="tan"/><rect x="60" y="110" width="80" height="90" fill="blue"/><rect x="60" y="110" width="80" height="20" fill="brown"/><rect x="40" y="110" width="20" height="60" fill="blue"/><rect x="140" y="110" width="20" height="60" fill="blue"/></svg>');
+        }
+
+        .inimigo .avatar {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="none"/><circle cx="100" cy="70" r="40" fill="darkred"/><rect x="60" y="110" width="80" height="90" fill="black"/><path d="M60,70 L80,40 L120,40 L140,70 Z" fill="darkred"/><circle cx="80" cy="60" r="10" fill="yellow"/><circle cx="120" cy="60" r="10" fill="yellow"/></svg>');
+        }
+
+        .barra-vida {
+            width: 100%;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .vida {
+            height: 100%;
+            background-color: #ff3333;
+            width: 100%;
+            transition: width 0.5s;
+        }
+
+        .status {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        #acoes-combate {
+            height: 40%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #log-combate {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        #botoes-combate {
+            display: flex;
+            gap: 10px;
+        }
+
+        .botao-combate {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2em;
+            background-color: #8b0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .botao-combate:hover {
+            background-color: #b22222;
+        }
+
+        /* Tela de game over */
+        #tela-game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+        }
+
+        #mensagem-game-over {
+            font-size: 4em;
+            color: red;
+            text-shadow: 0 0 10px red;
+            margin-bottom: 40px;
+        }
+
+        #botao-reiniciar {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            background-color: #8b0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Tela de vitória */
+        #tela-vitoria {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(76,175,80,1) 0%, rgba(0,100,0,1) 100%);
+            color: white;
+        }
+
+        #mensagem-vitoria {
+            font-size: 4em;
+            color: gold;
+            text-shadow: 0 0 10px gold;
+            margin-bottom: 40px;
+        }
+
+        #botao-jogar-novamente {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela Inicial -->
+    <div id="tela-inicial">
+        <div id="background-animation"></div>
+        <h1 id="titulo-jogo">A Jornada do Herói</h1>
+        <button id="botao-iniciar">Iniciar Aventura</button>
+    </div>
+
+    <!-- Tela de Introdução -->
+    <div id="tela-introducao">
+        <div id="texto-introducao">
+            <h2>A Jornada do Herói</h2>
+            <p>Em um mundo distante, onde a magia e a tecnologia coexistem, uma antiga profecia começa a se manifestar...</p>
+            <p>Você é o último descendente de uma linhagem de guardiões, destinado a enfrentar o mal que desperta após mil anos de sono.</p>
+            <p>As terras do reino de Eldoria estão em perigo. O Lorde das Sombras retornou e com ele, criaturas das trevas invadem vilas e cidades.</p>
+            <p>Armado apenas com a espada de seus ancestrais e conhecimentos antigos, você parte em uma jornada para encontrar os artefatos que podem selar o mal novamente.</p>
+            <p>Seus passos o levarão por florestas encantadas, montanhas perigosas e ruínas esquecidas.</p>
+            <p>Escolha seu caminho com sabedoria, pois cada decisão pode mudar o destino do mundo...</p>
+            <p>A aventura começa agora...</p>
+        </div>
+    </div>
+
+    <!-- Páginas do Jogo -->
+    <div id="pagina-jogo">
+        <div id="conteudo-pagina">
+            <div id="texto-pagina"></div>
+            <div id="opcoes"></div>
+        </div>
+    </div>
+
+    <!-- Tela de Combate -->
+    <div id="tela-combate">
+        <div id="area-combate">
+            <div class="personagem">
+                <div class="avatar"></div>
+                <div class="status">Herói</div>
+                <div class="barra-vida">
+                    <div class="vida" id="vida-personagem"></div>
+                </div>
+                <div class="status" id="status-personagem">HP: 100/100</div>
+            </div>
+            <div class="inimigo">
+                <div class="avatar"></div>
+                <div class="status" id="nome-inimigo">Inimigo</div>
+                <div class="barra-vida">
+                    <div class="vida" id="vida-inimigo"></div>
+                </div>
+                <div class="status" id="status-inimigo">HP: 100/100</div>
+            </div>
+        </div>
+        <div id="acoes-combate">
+            <div id="log-combate"></div>
+            <div id="botoes-combate">
+                <button class="botao-combate" id="botao-atacar">Atacar</button>
+                <button class="botao-combate" id="botao-habilidade">Habilidade Especial</button>
+                <button class="botao-combate" id="botao-potion">Usar Poção</button>
+                <button class="botao-combate" id="botao-fugir">Tentar Fugir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Game Over -->
+    <div id="tela-game-over">
+        <div id="mensagem-game-over">Game Over</div>
+        <button id="botao-reiniciar">Tentar Novamente</button>
+    </div>
+
+    <!-- Tela de Vitória -->
+    <div id="tela-vitoria">
+        <div id="mensagem-vitoria">Vitória!</div>
+        <button id="botao-jogar-novamente">Jogar Novamente</button>
+    </div>
+
+    <script>
+        // Definindo a estrutura do jogo
+        const paginas = {
+            1: {
+                texto: "Você se encontra na entrada da Floresta Sombria. O ar está carregado com magia antiga e o silêncio é perturbador. Seu primeiro destino é o Templo das Estrelas, onde dizem que o primeiro artefato está guardado. À sua frente, a trilha se divide em dois caminhos.",
+                opcoes: [
+                    { texto: "Seguir pelo caminho da esquerda, que parece mais escuro e denso", proxima: 2 },
+                    { texto: "Tomar o caminho da direita, que tem alguns sinais de uso recente", proxima: 3 }
+                ]
+            },
+            2: {
+                texto: "O caminho escuro o leva mais profundamente na floresta. As árvores parecem se fechar ao seu redor e você sente que está sendo observado. De repente, você ouve um ruído estranho vindo dos arbustos próximos.",
+                opcoes: [
+                    { texto: "Preparar sua espada e investigar o ruído", proxima: 4 },
+                    { texto: "Ignorar e continuar pelo caminho, acelerando o passo", proxima: 5 }
+                ]
+            },
+            3: {
+                texto: "Seguindo pelo caminho da direita, você encontra pegadas recentes. Após algumas horas de caminhada, você chega a uma pequena clareira onde um acampamento abandonado está montado. Parece que alguém deixou o local às pressas.",
+                opcoes: [
+                    { texto: "Examinar o acampamento em busca de pistas ou itens úteis", proxima: 6 },
+                    { texto: "Evitar o acampamento e continuar pela trilha", proxima: 7 }
+                ]
+            },
+            4: {
+                texto: "Empunhando sua espada, você afasta os arbustos e se depara com um pequeno ser brilhante - um espírito da floresta. A criatura parece assustada, mas ao perceber que você não tem intenção de atacá-la, se acalma.",
+                opcoes: [
+                    { texto: "Tentar se comunicar com o espírito", proxima: 8 },
+                    { texto: "Agradecer o encontro e seguir seu caminho", proxima: 9 }
+                ]
+            },
+            5: {
+                texto: "Você decide ignorar o ruído e acelera o passo. Infelizmente, isso era exatamente o que a criatura que o espreitava esperava. Um grande lobo sombrio, com olhos brilhantes como brasas, salta na sua frente, bloqueando o caminho. Ele não parece natural - há uma aura maligna ao seu redor.",
+                opcoes: [
+                    { texto: "Enfrentar o lobo sombrio", combate: "lobo" },
+                    { texto: "Tentar assustar o lobo com magia básica de luz", proxima: 10 }
+                ]
+            },
+            6: {
+                texto: "No acampamento, você encontra um diário parcialmente queimado. As páginas legíveis mencionam uma expedição em busca do mesmo artefato que você procura. Há também um mapa que mostra um caminho alternativo para o templo e uma pequena poção de cura.",
+                opcoes: [
+                    { texto: "Seguir o caminho indicado no mapa", proxima: 11 },
+                    { texto: "Ignorar o mapa e continuar pelo caminho original", proxima: 7 }
+                ],
+                acao: function() {
+                    // Adicionar poção ao inventário
+                    jogador.pocoes += 1;
+                    atualizarUI();
+                }
+            },
+            7: {
+                texto: "Continuando pela trilha, você se depara com um riacho de águas cristalinas. A água parece pura e revigorante. À distância, você percebe uma ponte antiga que cruza para o outro lado.",
+                opcoes: [
+                    { texto: "Beber a água do riacho e descansar um pouco", proxima: 12 },
+                    { texto: "Seguir diretamente para a ponte", proxima: 13 }
+                ]
+            },
+            8: {
+                texto: "O espírito da floresta parece entender sua linguagem. Através de gestos e fragmentos de palavras antigas, ele tenta lhe transmitir uma mensagem importante. Você compreende que há um perigo à frente, mas também uma passagem secreta que pode levá-lo ao templo mais rapidamente.",
+                opcoes: [
+                    { texto: "Pedir ao espírito que mostre a passagem secreta", proxima: 14 },
+                    { texto: "Agradecer e seguir o caminho normal, agora mais atento ao perigo", proxima: 15 }
+                ]
+            },
+            9: {
+                texto: "Você agradece ao espírito com um aceno e continua seu caminho. O espírito, entretanto, decide segui-lo à distância. Após algum tempo, você chega a uma bifurcação não marcada em seus mapas.",
+                opcoes: [
+                    { texto: "Seguir o caminho que desce em direção a um vale", proxima: 16 },
+                    { texto: "Tomar o caminho que sobe em direção às colinas", proxima: 17 }
+                ]
+            },
+            10: {
+                texto: "Você rapidamente conjura uma magia de luz, criando um flash brilhante. O lobo sombrio uiva de dor quando a luz atinge seus olhos sensíveis. Ele recua, dando-lhe uma oportunidade.",
+                opcoes: [
+                    { texto: "Aproveitar a oportunidade para fugir rapidamente", proxima: 18 },
+                    { texto: "Atacar o lobo enquanto ele está desorientado", combate: "lobo_fraco" }
+                ]
+            },
+            // Finais
+            18: {
+                texto: "Aproveitando a confusão do lobo, você corre pela floresta, desviando de árvores e pulando sobre raízes. Após uma longa corrida, chega à beira de um penhasco. Ao olhar para trás, vê que perdeu o lobo, mas agora está perdido na floresta.",
+                opcoes: [
+                    { texto: "Continuar explorando, tentando encontrar o caminho para o templo", final: "vitoria" }
+                ]
+            },
+            14: {
+                texto: "O espírito o guia por um caminho escondido entre as árvores. Após uma curta jornada, você chega a uma entrada secreta do templo. Dentro, encontra o artefato brilhando em um pedestal. Você o pega e sente seu poder antigo fluindo por suas veias.",
+                opcoes: [
+                    { texto: "Retornar com o artefato e continuar sua missão", final: "vitoria" }
+                ]
+            },
+            13: {
+                texto: "Ao atravessar a ponte, você é emboscado por criaturas sombrias. Apesar de lutar bravamente, o número de inimigos é grande demais. Sua visão escurece enquanto os servos do Lorde das Sombras o arrastam para a escuridão.",
+                opcoes: [
+                    { texto: "Aceitar seu destino", final: "derrota" }
+                ]
+            }
+        };
+
+        // Definições de combate
+        const inimigos = {
+            lobo: {
+                nome: "Lobo Sombrio",
+                hp: 60,
+                maxHp: 60,
+                ataque: 10,
+                defesa: 5,
+                proxima: 18
+            },
+            lobo_fraco: {
+                nome: "Lobo Sombrio Ferido",
+                hp: 30,
+                maxHp: 60,
+                ataque: 8,
+                defesa: 3,
+                proxima: 18
+            }
+        };
+
+        // Jogador
+        let jogador = {
+            hp: 100,
+            maxHp: 100,
+            ataque: 15,
+            defesa: 5,
+            poderMagico: 10,
+            pocoes: 2,
+            temEscudo: false,
+            temAmuleto: false
+        };
+
+        // Estado atual do jogo
+        let estadoJogo = {
+            paginaAtual: 1,
+            emCombate: false,
+            inimigoAtual: null
+        };
+
+        // Elementos da UI
+        const telaInicial = document.getElementById('tela-inicial');
+        const telaIntroducao = document.getElementById('tela-introducao');
+        const paginaJogo = document.getElementById('pagina-jogo');
+        const telaCombate = document.getElementById('tela-combate');
+        const telaGameOver = document.getElementById('tela-game-over');
+        const telaVitoria = document.getElementById('tela-vitoria');
+        const textoPagina = document.getElementById('texto-pagina');
+        const opcoesPagina = document.getElementById('opcoes');
+        const botaoIniciar = document.getElementById('botao-iniciar');
+        const botaoReiniciar = document.getElementById('botao-reiniciar');
+        const botaoJogarNovamente = document.getElementById('botao-jogar-novamente');
+        const logCombate = document.getElementById('log-combate');
+        const botaoAtacar = document.getElementById('botao-atacar');
+        const botaoHabilidade = document.getElementById('botao-habilidade');
+        const botaoPotion = document.getElementById('botao-potion');
+        const botaoFugir = document.getElementById('botao-fugir');
+        const vidaPersonagem = document.getElementById('vida-personagem');
+        const vidaInimigo = document.getElementById('vida-inimigo');
+        const statusPersonagem = document.getElementById('status-personagem');
+        const statusInimigo = document.getElementById('status-inimigo');
+        const nomeInimigo = document.getElementById('nome-inimigo');
+
+        // Criar estrelas para animação da tela inicial
+        function criarEstrelas() {
+            const backgroundAnimation = document.getElementById('background-animation');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.classList.add('stars');
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                backgroundAnimation.appendChild(star);
+            }
+        }
+
+        // Inicializar o jogo
+        function iniciarJogo() {
+            telaInicial.style.display = 'none';
+            telaIntroducao.style.display = 'flex';
+            
+            // Após a introdução, mostrar a primeira página
+            setTimeout(() => {
+                telaIntroducao.style.display = 'none';
+                paginaJogo.style.display = 'flex';
+                mostrarPagina(1);
+            }, 15000); // Tempo suficiente para ler a introdução
+        }
+
+        // Mostrar uma página específica
+        function mostrarPagina(numeroPagina) {
+            const pagina = paginas[numeroPagina];
+            if (!pagina) return;
+            
+            estadoJogo.paginaAtual = numeroPagina;
+            
+            textoPagina.textContent = pagina.texto;
+            opcoesPagina.innerHTML = '';
+            
+            pagina.opcoes.forEach(opcao => {
+                const botaoOpcao = document.createElement('button');
+                botaoOpcao.classList.add('opcao');
+                botaoOpcao.textContent = opcao.texto;
+                
+                if (opcao.proxima) {
+                    botaoOpcao.addEventListener('click', () => {
+                        if (pagina.acao) pagina.acao();
+                        mostrarPagina(opcao.proxima);
+                    });
+                } else if (opcao.combate) {
+                    botaoOpcao.addEventListener('click', () => {
+                        if (pagina.acao) pagina.acao();
+                        iniciarCombate(opcao.combate);
+                    });
+                } else if (opcao.final) {
+                    botaoOpcao.addEventListener('click', () => {
+                        if (pagina.acao) pagina.acao();
+                        finalizarJogo(opcao.final);
+                    });
+                }
+                
+                opcoesPagina.appendChild(botaoOpcao);
+            });
+        }
+
+        // Iniciar combate
+        function iniciarCombate(tipoInimigo) {
+            const inimigo = inimigos[tipoInimigo];
+            if (!inimigo) return;
+            
+            estadoJogo.emCombate = true;
+            estadoJogo.inimigoAtual = JSON.parse(JSON.stringify(inimigo)); // Clone para não afetar o original
+            
+            paginaJogo.style.display = 'none';
+            telaCombate.style.display = 'flex';
+            
+            // Resetar interface de combate
+            logCombate.innerHTML = `<p>Você encontrou um ${inimigo.nome}!</p>`;
+            nomeInimigo.textContent = inimigo.nome;
+            atualizarBarrasVida();
+        }
+
+        // Atualizar barras de vida no combate
+        function atualizarBarrasVida() {
+            const percentualVidaJogador = (jogador.hp / jogador.maxHp) * 100;
+            const percentualVidaInimigo = (estadoJogo.inimigoAtual.hp / estadoJogo.inimigoAtual.maxHp) * 100;
+            
+            vidaPersonagem.style.width = `${percentualVidaJogador}%`;
+            vidaInimigo.style.width = `${percentualVidaInimigo}%`;
+            
+            statusPersonagem.textContent = `HP: ${jogador.hp}/${jogador.maxHp}`;
+            statusInimigo.textContent = `HP: ${estadoJogo.inimigoAtual.hp}/${estadoJogo.inimigoAtual.maxHp}`;
+        }
+
+        // Ação de ataque no combate
+        function atacar() {
+            if (!estadoJogo.emCombate) return;
+            
+            // Jogador ataca
+            const danoJogador = Math.max(1, jogador.ataque - estadoJogo.inimigoAtual.defesa/2);
+            estadoJogo.inimigoAtual.hp = Math.max(0, estadoJogo.inimigoAtual.hp - danoJogador);
+            
+            logCombate.innerHTML += `<p>Você ataca e causa ${danoJogador} de dano!</p>`;
+            
+            // Verificar se o inimigo foi derrotado
+            if (estadoJogo.inimigoAtual.hp <= 0) {
+                logCombate.innerHTML += `<p>Você derrotou o ${estadoJogo.inimigoAtual.nome}!</p>`;
+                atualizarBarrasVida();
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    paginaJogo.style.display = 'flex';
+                    estadoJogo.emCombate = false;
+                    mostrarPagina(estadoJogo.inimigoAtual.proxima);
+                }, 2000);
+                
+                return;
+            }
+            
+            // Inimigo ataca
+            const danoInimigo = Math.max(1, estadoJogo.inimigoAtual.ataque - jogador.defesa/2);
+            jogador.hp = Math.max(0, jogador.hp - danoInimigo);
+            
+            logCombate.innerHTML += `<p>O ${estadoJogo.inimigoAtual.nome} ataca e causa ${danoInimigo} de dano!</p>`;
+            
+            // Verificar se o jogador foi derrotado
+            if (jogador.hp <= 0) {
+                logCombate.innerHTML += `<p>Você foi derrotado!</p>`;
+                atualizarBarrasVida();
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    finalizarJogo('derrota');
+                }, 2000);
+                
+                return;
+            }
+            
+            atualizarBarrasVida();
+        }
+
+        // Usar habilidade especial no combate
+        function usarHabilidade() {
+            if (!estadoJogo.emCombate) return;
+            
+            // Habilidade especial baseada no poder mágico
+            const danoMagico = jogador.poderMagico * 1.5;
+            estadoJogo.inimigoAtual.hp = Math.max(0, estadoJogo.inimigoAtual.hp - danoMagico);
+            
+            logCombate.innerHTML += `<p>Você usa sua habilidade especial e causa ${danoMagico} de dano mágico!</p>`;
+            
+            // Verificar se o inimigo foi derrotado
+            if (estadoJogo.inimigoAtual.hp <= 0) {
+                logCombate.innerHTML += `<p>Você derrotou o ${estadoJogo.inimigoAtual.nome}!</p>`;
+                atualizarBarrasVida();
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    paginaJogo.style.display = 'flex';
+                    estadoJogo.emCombate = false;
+                    mostrarPagina(estadoJogo.inimigoAtual.proxima);
+                }, 2000);
+                
+                return;
+            }
+            
+            // Inimigo ataca
+            const danoInimigo = Math.max(1, estadoJogo.inimigoAtual.ataque - jogador.defesa/2);
+            jogador.hp = Math.max(0, jogador.hp - danoInimigo);
+            
+            logCombate.innerHTML += `<p>O ${estadoJogo.inimigoAtual.nome} ataca e causa ${danoInimigo} de dano!</p>`;
+            
+            // Verificar se o jogador foi derrotado
+            if (jogador.hp <= 0) {
+                logCombate.innerHTML += `<p>Você foi derrotado!</p>`;
+                atualizarBarrasVida();
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    finalizarJogo('derrota');
+                }, 2000);
+                
+                return;
+            }
+            
+            atualizarBarrasVida();
+        }
+
+        // Usar poção no combate
+        function usarPocao() {
+            if (!estadoJogo.emCombate || jogador.pocoes <= 0) return;
+            
+            jogador.pocoes--;
+            const curaAmount = 30;
+            jogador.hp = Math.min(jogador.maxHp, jogador.hp + curaAmount);
+            
+            logCombate.innerHTML += `<p>Você usa uma poção e recupera ${curaAmount} pontos de vida! Poções restantes: ${jogador.pocoes}</p>`;
+            
+            // Inimigo ataca
+            const danoInimigo = Math.max(1, estadoJogo.inimigoAtual.ataque - jogador.defesa/2);
+            jogador.hp = Math.max(0, jogador.hp - danoInimigo);
+            
+            logCombate.innerHTML += `<p>O ${estadoJogo.inimigoAtual.nome} ataca e causa ${danoInimigo} de dano!</p>`;
+            
+            // Verificar se o jogador foi derrotado
+            if (jogador.hp <= 0) {
+                logCombate.innerHTML += `<p>Você foi derrotado!</p>`;
+                atualizarBarrasVida();
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    finalizarJogo('derrota');
+                }, 2000);
+                
+                return;
+            }
+            
+            atualizarBarrasVida();
+        }
+
+        // Tentar fugir do combate
+        function tentarFugir() {
+            if (!estadoJogo.emCombate) return;
+            
+            // 50% de chance de fugir
+            if (Math.random() > 0.5) {
+                logCombate.innerHTML += `<p>Você conseguiu fugir do combate!</p>`;
+                
+                setTimeout(() => {
+                    telaCombate.style.display = 'none';
+                    paginaJogo.style.display = 'flex';
+                    estadoJogo.emCombate = false;
+                    mostrarPagina(estadoJogo.inimigoAtual.proxima);
+                }, 2000);
+            } else {
+                logCombate.innerHTML += `<p>Você não conseguiu fugir!</p>`;
+                
+                // Inimigo ataca com vantagem (dano aumentado)
+                const danoInimigo = Math.max(1, estadoJogo.inimigoAtual.ataque * 1.5 - jogador.defesa/2);
+                jogador.hp = Math.max(0, jogador.hp - danoInimigo);
+                
+                logCombate.innerHTML += `<p>O ${estadoJogo.inimigoAtual.nome} ataca com vantagem e causa ${danoInimigo} de dano!</p>`;
+                
+                // Verificar se o jogador foi derrotado
+                if (jogador.hp <= 0) {
+                    logCombate.innerHTML += `<p>Você foi derrotado!</p>`;
+                    atualizarBarrasVida();
+                    
+                    setTimeout(() => {
+                        telaCombate.style.display = 'none';
+                        finalizarJogo('derrota');
+                    }, 2000);
+                    
+                    return;
+                }
+                
+                atualizarBarrasVida();
+            }
+        }
+
+        // Finalizar o jogo (vitória ou derrota)
+        function finalizarJogo(resultado) {
+            if (resultado === 'vitoria') {
+                telaVitoria.style.display = 'flex';
+            } else {
+                telaGameOver.style.display = 'flex';
+            }
+        }
+
+        // Reiniciar o jogo
+        function reiniciarJogo() {
+            // Resetar estado do jogador
+            jogador = {
+                hp: 100,
+                maxHp: 100,
+                ataque: 15,
+                defesa: 5,
+                poderMagico: 10,
+                pocoes: 2,
+                temEscudo: false,
+                temAmuleto: false
+            };
+            
+            // Resetar estado do jogo
+            estadoJogo = {
+                paginaAtual: 1,
+                emCombate: false,
+                inimigoAtual: null
+            };
+            
+            // Esconder todas as telas
+            telaInicial.style.display = 'flex';
+            telaIntroducao.style.display = 'none';
+            paginaJogo.style.display = 'none';
+            telaCombate.style.display = 'none';
+            telaGameOver.style.display = 'none';
+            telaVitoria.style.display = 'none';
+        }
+
+        // Atualizar a UI com base no estado atual
+        function atualizarUI() {
+            // Atualizar informações do jogador
+            if (estadoJogo.emCombate) {
+                atualizarBarrasVida();
+            }
+        }
+
+        // Event listeners
+        botaoIniciar.addEventListener('click', iniciarJogo);
+        botaoReiniciar.addEventListener('click', reiniciarJogo);
+        botaoJogarNovamente.addEventListener('click', reiniciarJogo);
+        botaoAtacar.addEventListener('click', atacar);
+        botaoHabilidade.addEventListener('click', usarHabilidade);
+        botaoPotion.addEventListener('click', usarPocao);
+        botaoFugir.addEventListener('click', tentarFugir);
+
+        // Inicializar o jogo
+        criarEstrelas();
+    </script>
+</body>
+</html>
